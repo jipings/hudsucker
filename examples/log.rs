@@ -1,3 +1,4 @@
+use http::Uri;
 use hudsucker::{
     certificate_authority::RcgenAuthority,
     hyper::{Request, Response},
@@ -28,7 +29,8 @@ impl HttpHandler for LogHandler {
         req.into()
     }
 
-    async fn handle_response(&mut self, _ctx: &HttpContext, res: Response<Body>) -> Response<Body> {
+    async fn handle_response(&mut self, _ctx: &HttpContext, res: Response<Body>, uri: &Uri) -> Response<Body> {
+        println!("URI {:?}, Path: {}", uri, uri.path());
         println!("{:?}", res);
         res
     }
@@ -56,7 +58,7 @@ async fn main() {
     let ca = RcgenAuthority::new(key_pair, ca_cert, 1_000, aws_lc_rs::default_provider());
 
     let proxy = Proxy::builder()
-        .with_addr(SocketAddr::from(([127, 0, 0, 1], 3000)))
+        .with_addr(SocketAddr::from(([0, 0, 0, 0], 8888)))
         .with_ca(ca)
         .with_rustls_client(aws_lc_rs::default_provider())
         .with_http_handler(LogHandler)

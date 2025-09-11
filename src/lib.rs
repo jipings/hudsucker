@@ -118,6 +118,7 @@ pub trait HttpHandler: Clone + Send + Sync + 'static {
         &mut self,
         _ctx: &HttpContext,
         res: Response<Body>,
+        _uri: &Uri,
     ) -> impl Future<Output = Response<Body>> + Send {
         async { res }
     }

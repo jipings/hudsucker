@@ -111,6 +111,8 @@ where
         } else if hyper_tungstenite::is_upgrade_request(&req) {
             Ok(self.upgrade_websocket(req))
         } else {
+            let uri = req.uri().clone();
+
             let res = self
                 .client
                 .request(normalize_request(req))
@@ -120,7 +122,7 @@ where
             match res {
                 Ok(res) => Ok(self
                     .http_handler
-                    .handle_response(&ctx, res.map(Body::from))
+                    .handle_response(&ctx, res.map(Body::from), &uri)
                     .instrument(info_span!("handle_response"))
                     .await),
                 Err(err) => Ok(self
