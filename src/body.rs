@@ -1,6 +1,6 @@
 use crate::Error;
 use futures::{Stream, TryStream, TryStreamExt};
-use http_body_util::{Collected, Empty, Full, StreamBody, combinators::BoxBody};
+use http_body_util::{combinators::BoxBody, BodyExt, Collected, Empty, Full, StreamBody};
 use hyper::{
     Request, Response,
     body::{Body as HttpBody, Bytes, Frame, Incoming, SizeHint},
@@ -41,6 +41,41 @@ impl Body {
                     .map_ok(Frame::data)
                     .map_err(Into::into),
             ))),
+        }
+    }
+
+    pub async fn to_bytes(self) -> Bytes {
+        match self.inner {
+            Internal::BoxBody(body) => {
+                let collected_result = body.collect().await;
+                if let Ok(collected) = collected_result {
+                    collected.to_bytes()
+                } else {
+                    Bytes::new()
+                }
+            },
+            Internal::Collected(body) => {
+                body.to_bytes()
+            },
+            Internal::Empty(_body) => {
+                Bytes::new()
+            },
+            Internal::Full(body) => {
+                let collected_result = body.boxed().collect().await;
+                let Ok(collected) = collected_result;
+                collected.to_bytes()
+            },
+            Internal::Incoming(body) => {
+                let collected_result = body.collect().await;
+                if let Ok(collected) = collected_result {
+                    collected.to_bytes()
+                } else {
+                    Bytes::new()
+                }
+            },
+            Internal::String(body) => {
+                Bytes::from(body.as_bytes().to_owned())
+            }
         }
     }
 }
