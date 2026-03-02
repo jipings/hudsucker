@@ -1,12 +1,22 @@
 use crate::{
-    HttpContext, HttpHandler, RequestOrResponse, WebSocketContext, WebSocketHandler, body::Body,
-    certificate_authority::CertificateAuthority, rewind::Rewind,
+    HttpContext,
+    HttpHandler,
+    RequestOrResponse,
+    WebSocketContext,
+    WebSocketHandler,
+    body::Body,
+    certificate_authority::CertificateAuthority,
+    rewind::Rewind,
 };
 use futures::{Sink, Stream, StreamExt};
 use http::uri::{Authority, Scheme};
 use hyper::{
-    Method, Request, Response, StatusCode, Uri,
-    body::{Bytes, Incoming},
+    Method,
+    Request,
+    Response,
+    StatusCode,
+    Uri,
+    body::Incoming,
     header::Entry,
     service::service_fn,
     upgrade::Upgraded,
@@ -20,7 +30,8 @@ use std::{convert::Infallible, net::SocketAddr, sync::Arc};
 use tokio::{io::AsyncReadExt, net::TcpStream, task::JoinHandle};
 use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::{
-    Connector, WebSocketStream,
+    Connector,
+    WebSocketStream,
     tungstenite::{self, Message},
 };
 use tracing::{Instrument, Span, error, info_span, instrument, warn};
@@ -151,10 +162,7 @@ where
                                 }
                             };
 
-                            let mut upgraded = Rewind::new(
-                                upgraded,
-                                Bytes::copy_from_slice(buffer[..bytes_read].as_ref()),
-                            );
+                            let mut upgraded = Rewind::new(upgraded, buffer, bytes_read);
 
                             if self
                                 .http_handler
